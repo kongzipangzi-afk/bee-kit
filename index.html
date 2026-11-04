@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>꿀벌 꽃가루 모으기</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: "Malgun Gothic", sans-serif; background: #fff8dc; text-align: center; padding: 16px; }
+  h1 { font-size: 28px; margin-bottom: 4px; }
+  p { margin-bottom: 10px; color: #555; }
+  #field { position: relative; width: min(800px, 100%); aspect-ratio: 16 / 9; margin: 0 auto; background: url("assets/background.png") center / cover no-repeat; border: 3px solid #333; border-radius: 12px; overflow: hidden; touch-action: none; }
+  .thing { position: absolute; width: 10%; height: auto; transform: translate(-50%, -50%); user-select: none; pointer-events: none; }
+  #score { font-weight: bold; font-size: 20px; margin-top: 10px; }
+  button { font: inherit; padding: 8px 18px; margin-top: 8px; cursor: pointer; }
+</style>
+</head>
+<body>
+  <h1>꿀벌 꽃가루 모으기</h1>
+  <p>마우스나 손가락으로 꿀벌을 움직여 꽃을 모아요. 거미는 피해요!</p>
+  <div id="field"></div>
+  <div id="score">점수 0</div>
+  <button id="again">다시 하기</button>
+
+<script>
+  const THINGS = {
+    bee: "assets/bee.png",
+    flower: "assets/flower.png",
+    honey: "assets/honey.png",
+    spider: "assets/spider.png",
+  };
+
+  const field = document.getElementById("field");
+  const scoreBox = document.getElementById("score");
+  let score = 0;
+  let bee, items = [];
+
+  function add(kind, x, y) {
+    const el = document.createElement("img");
+    el.className = "thing";
+    el.src = THINGS[kind];
+    el.alt = kind;
+    el.draggable = false;
+    if (kind === "bee") el.style.width = "13%";
+    el.style.left = x + "%";
+    el.style.top = y + "%";
+    field.appendChild(el);
+    return { kind, x, y, el };
+  }
+
+  function start() {
+    field.innerHTML = "";
+    score = 0;
+    items = [];
+    scoreBox.textContent = "점수 0";
+    for (let i = 0; i < 8; i++) items.push(add("flower", 8 + Math.random() * 84, 10 + Math.random() * 80));
+    items.push(add("honey", 8 + Math.random() * 84, 10 + Math.random() * 80));
+    for (let i = 0; i < 2; i++) items.push(add("spider", 8 + Math.random() * 84, 10 + Math.random() * 80));
+    bee = add("bee", 50, 50);
+  }
+
+  function move(e) {
+    const box = field.getBoundingClientRect();
+    bee.x = ((e.clientX - box.left) / box.width) * 100;
+    bee.y = ((e.clientY - box.top) / box.height) * 100;
+    bee.el.style.left = bee.x + "%";
+    bee.el.style.top = bee.y + "%";
+    items = items.filter((it) => {
+      if (Math.hypot(it.x - bee.x, (it.y - bee.y) * 0.56) > 5) return true;
+      score += it.kind === "flower" ? 1 : it.kind === "honey" ? 5 : -3;
+      scoreBox.textContent = "점수 " + score;
+      it.el.remove();
+      return false;
+    });
+  }
+
+  field.addEventListener("pointermove", move);
+  field.addEventListener("pointerdown", move);
+  document.getElementById("again").addEventListener("click", start);
+  start();
+</script>
+</body>
+</html>
